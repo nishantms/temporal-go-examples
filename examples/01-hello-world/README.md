@@ -23,28 +23,54 @@ This is your first Temporal workflow! 🎉
 
 ## How to Run
 
-### Step 1: Start the Worker
+### Option 1: Using Docker (Recommended)
 ```bash
+# Make sure everything is set up
+./scripts/docker-setup.sh
+
+# In terminal 1 - start worker
+docker-compose exec temporal-go-examples ./run-example.sh 01-hello-world worker
+
+# In terminal 2 - execute workflow
+docker-compose exec temporal-go-examples ./run-example.sh 01-hello-world client
+```
+
+### Option 2: Local Go Installation
+```bash
+# Make sure Temporal server is running first!
+# See main README.md for Temporal setup
+
 # In terminal 1
 cd examples/01-hello-world
 go run worker/main.go
-```
 
-You should see:
-```
-Starting worker on task queue: temporal-learning-queue
-Worker started successfully
-```
-
-### Step 2: Execute the Workflow
-```bash
 # In terminal 2 (keep worker running)
 cd examples/01-hello-world
 go run client/main.go
 ```
 
-You should see:
+### Expected Output
+
+**Worker Terminal:**
 ```
+🚀 Running 01-hello-world worker...
+📂 Working directory: examples/01-hello-world
+🔗 Temporal server: localhost:7233
+
+▶️  Executing: go run worker/main.go
+----------------------------------------
+Starting worker on task queue: temporal-learning-queue
+Worker started successfully
+```
+
+**Client Terminal:**
+```
+🚀 Running 01-hello-world client...
+📂 Working directory: examples/01-hello-world
+🔗 Temporal server: localhost:7233
+
+▶️  Executing: go run client/main.go
+----------------------------------------
 Starting workflow...
 Workflow result: Hello, Temporal World!
 Workflow completed successfully

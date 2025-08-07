@@ -34,15 +34,27 @@ This example simulates an order processing workflow:
 
 ## How to Run
 
-### Step 1: Start the Worker
+### Option 1: Using Docker (Recommended)
 ```bash
-cd examples/02-activities
-go run worker/main.go
+# Make sure everything is set up
+./scripts/docker-setup.sh
+
+# In terminal 1 - start worker
+docker-compose exec temporal-go-examples ./run-example.sh 02-activities worker
+
+# In terminal 2 - execute workflow
+docker-compose exec temporal-go-examples ./run-example.sh 02-activities client
 ```
 
-### Step 2: Execute the Workflow
+### Option 2: Local Go Installation
 ```bash
-# In another terminal
+# Make sure Temporal server is running first!
+
+# In terminal 1
+cd examples/02-activities
+go run worker/main.go
+
+# In terminal 2 (keep worker running)
 cd examples/02-activities
 go run client/main.go
 ```

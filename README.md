@@ -45,14 +45,28 @@ Go (Golang) is a programming language developed by Google. It's:
 
 ### Installing Temporal Server
 
-You'll need a Temporal server running locally. The easiest way is with Docker:
+You'll need a Temporal server running locally. We provide multiple Docker-based options:
 
 1. **Install Docker** (if not installed):
-   - Ubuntu: `sudo apt install docker.io`
+   - Ubuntu: `sudo apt install docker.io docker-compose`
    - macOS: Download Docker Desktop
    - Windows: Download Docker Desktop
 
-2. **Run Temporal Server:**
+2. **Run Temporal Server (Choose one option):**
+
+   **Option A: All-in-One Setup (Recommended):**
+   ```bash
+   # Use our automated setup script
+   ./scripts/docker-setup.sh
+   ```
+
+   **Option B: Docker Compose:**
+   ```bash
+   # Build and start all services
+   docker-compose up -d
+   ```
+
+   **Option C: Manual Temporal Setup:**
    ```bash
    # Clone Temporal's docker-compose setup
    git clone https://github.com/temporalio/docker-compose.git temporal-docker
@@ -104,29 +118,29 @@ temporal-go-examples/
 
 ## Getting Started
 
-### Quick Start (5 minutes)
+### Quick Start (3 minutes)
 
 1. **Clone and setup:**
    ```bash
    git clone <your-repo>
    cd temporal-go-examples
-   ./scripts/setup.sh
    ```
 
-2. **Start Temporal server:**
+2. **Start everything with Docker:**
    ```bash
-   ./scripts/run-temporal.sh
+   ./scripts/docker-setup.sh
    ```
 
 3. **Run your first example:**
    ```bash
-   # Terminal 1
-   cd examples/01-hello-world
-   go run worker/main.go
+   # Enter the container
+   docker-compose exec temporal-go-examples bash
    
-   # Terminal 2  
-   cd examples/01-hello-world
-   go run client/main.go
+   # In container terminal 1 - start worker
+   ./run-example.sh 01-hello-world worker
+   
+   # In container terminal 2 - start client
+   docker-compose exec temporal-go-examples ./run-example.sh 01-hello-world client
    ```
 
 4. **See results:**
@@ -134,36 +148,28 @@ temporal-go-examples/
    - Visit http://localhost:8080 for the Temporal Web UI
 
 📖 **For detailed instructions, see [GETTING_STARTED.md](GETTING_STARTED.md)**
+🐳 **For Docker setup details, see [DOCKER_SETUP.md](DOCKER_SETUP.md)**
+⚡ **For quick Docker commands, see [DOCKER_QUICK_REFERENCE.md](DOCKER_QUICK_REFERENCE.md)**
 
-### 1. Clone and Setup
+### Alternative Setup Methods
 
+#### Method 1: Docker Compose (Manual)
+```bash
+git clone <your-repo-url>
+cd temporal-go-examples
+docker-compose up -d
+```
+
+#### Method 2: Local Development
 ```bash
 git clone <your-repo-url>
 cd temporal-go-examples
 go mod tidy
-```
 
-### 2. Start Temporal Server
-
-```bash
-# Option 1: Use our helper script
-./scripts/run-temporal.sh
-
-# Option 2: Manual Docker setup
+# Start Temporal server separately
 git clone https://github.com/temporalio/docker-compose.git temporal-docker
 cd temporal-docker
 docker-compose up
-```
-
-### 3. Run Your First Example
-
-```bash
-# In one terminal - start the worker
-cd examples/01-hello-world
-go run worker/main.go
-
-# In another terminal - start the workflow
-go run client/main.go
 ```
 
 ## Learning Path
@@ -228,6 +234,30 @@ msg := <-ch        // Receive
 
 ## Useful Commands
 
+### Docker Commands
+```bash
+# Start everything
+./scripts/docker-setup.sh
+
+# Enter development container
+docker-compose exec temporal-go-examples bash
+
+# Run examples with helper script
+docker-compose exec temporal-go-examples ./run-example.sh 01-hello-world worker
+docker-compose exec temporal-go-examples ./run-example.sh 01-hello-world client
+
+# View logs
+docker-compose logs temporal-go-examples
+docker-compose logs temporal-sqlite
+
+# Stop services
+docker-compose down
+
+# Stop and remove all data
+docker-compose down -v
+```
+
+### Go Development Commands
 ```bash
 # Build all examples
 go build ./...
@@ -243,6 +273,11 @@ go mod tidy
 
 # Update dependencies
 go get -u ./...
+
+# Run specific example (inside container or with local Go)
+cd examples/01-hello-world
+go run worker/main.go    # Terminal 1
+go run client/main.go    # Terminal 2
 ```
 
 ## Troubleshooting
@@ -251,14 +286,25 @@ go get -u ./...
 
 1. **"Temporal server not running"**
    - Make sure Docker is running
-   - Start Temporal server: `docker-compose up` in temporal-docker directory
+   - Start Temporal server: `./scripts/docker-setup.sh` or `docker-compose up`
+   - Check if services are healthy: `docker-compose ps`
 
 2. **"Module not found"**
    - Run `go mod tidy` to download dependencies
+   - Or enter the container: `docker-compose exec temporal-go-examples bash`
 
 3. **"Port already in use"**
    - Check if Temporal is already running: `docker ps`
    - Stop existing containers: `docker-compose down`
+
+4. **"Cannot connect to Temporal server"**
+   - Check if Temporal server is ready: `docker-compose logs temporal-sqlite`
+   - Wait for health checks to pass: `docker-compose ps`
+   - Verify connection: `docker-compose exec temporal-go-examples ./check-temporal.sh`
+
+5. **Docker permission issues**
+   - On Linux, add user to docker group: `sudo usermod -aG docker $USER`
+   - Restart terminal or log out/in
 
 ### Getting Help
 

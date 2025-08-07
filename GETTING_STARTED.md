@@ -2,64 +2,77 @@
 
 Welcome to Temporal Go Examples! 🎉
 
-This guide will walk you through your first steps with Temporal and Go.
+This guide will walk you through your first steps with Temporal and Go using our Docker-based setup.
 
-## Quick Start (5 minutes)
+## Quick Start (3 minutes)
 
 ### 1. Prerequisites Check
-
-Make sure you have Go installed:
-```bash
-go version
-```
 
 Make sure you have Docker installed:
 ```bash
 docker --version
+docker-compose --version
+```
+
+Optionally, check if Go is installed for local development:
+```bash
+go version
 ```
 
 ### 2. Setup the Project
 
 ```bash
-# Run the setup script
-./scripts/setup.sh
+# Clone the repository
+git clone <your-repo-url>
+cd temporal-go-examples
+
+# Run the automated setup script
+./scripts/docker-setup.sh
 ```
 
-### 3. Start Temporal Server
+This will:
+- Build your Go application Docker image
+- Start Temporal server with SQLite backend
+- Start Temporal Web UI
+- Set up all networking and health checks
 
+### 3. Verify Everything is Running
+
+Check that all services are healthy:
 ```bash
-# Option 1: Use our script (recommended)
-./scripts/run-temporal.sh
-
-# Option 2: Manual setup
-git clone https://github.com/temporalio/docker-compose.git temporal-docker
-cd temporal-docker
-docker-compose up
+docker-compose ps
 ```
 
-This starts:
-- Temporal server (localhost:7233)
-- Temporal Web UI (localhost:8080) 
-- PostgreSQL database
+You should see services with "Up" status and health checks passing.
 
 ### 4. Run Your First Workflow
 
-Open 2 terminals:
-
 **Terminal 1 - Start the Worker:**
 ```bash
-cd examples/01-hello-world
-go run worker/main.go
+# Enter the development container
+docker-compose exec temporal-go-examples bash
+
+# Run the worker using our helper script
+./run-example.sh 01-hello-world worker
 ```
 
 **Terminal 2 - Execute the Workflow:**
 ```bash
-cd examples/01-hello-world  
-go run client/main.go
+# In a new terminal, enter the container again
+docker-compose exec temporal-go-examples bash
+
+# Run the client
+./run-example.sh 01-hello-world client
 ```
 
 You should see:
 ```
+🚀 Running 01-hello-world worker...
+📂 Working directory: examples/01-hello-world
+🔗 Temporal server: localhost:7233
+
+▶️  Executing: go run worker/main.go
+----------------------------------------
 [12:34:56] INFO: Starting GreetingWorkflow...
 [12:34:56] INFO: Workflow result: Hello, Temporal World! Welcome to Temporal! 🎉
 [12:34:56] INFO: Workflow completed successfully! 🎉
@@ -69,14 +82,15 @@ You should see:
 
 1. Open http://localhost:8080 in your browser
 2. You'll see your workflow execution
-3. Click on it to see the details
+3. Click on it to see the details, timeline, and logs
 
 ## What Just Happened?
 
-1. **Worker** - A process that can execute workflows and activities
-2. **Workflow** - A function that defines your business logic
-3. **Client** - Started the workflow and waited for the result
-4. **Temporal Server** - Orchestrated everything and stored the state
+1. **Docker Environment** - Everything runs in containers with proper networking
+2. **Worker** - A process that can execute workflows and activities
+3. **Workflow** - A function that defines your business logic
+4. **Client** - Started the workflow and waited for the result
+5. **Temporal Server** - Orchestrated everything and stored the state
 
 ## Next Steps
 
@@ -86,6 +100,51 @@ Now try the other examples in order:
 2. **[Activities](examples/02-activities/)** - Learn about breaking work into activities
 3. **[Signals](examples/03-signals/)** - Learn about communicating with workflows
 4. **[Error Handling](examples/04-error-handling/)** - Learn about retry policies and compensation
+
+## Docker Commands Reference
+
+### Essential Commands
+```bash
+# Start everything
+./scripts/docker-setup.sh
+
+# Enter development container
+docker-compose exec temporal-go-examples bash
+
+# Run examples with helper script
+./run-example.sh <example-name> <worker|client>
+
+# Check Temporal connection
+./check-temporal.sh
+
+# View logs
+docker-compose logs temporal-go-examples
+docker-compose logs temporal-sqlite
+
+# Stop services
+docker-compose down
+
+# Stop and remove all data
+docker-compose down -v
+```
+
+### Development Workflow
+```bash
+# 1. Start services (once)
+./scripts/docker-setup.sh
+
+# 2. Development loop
+docker-compose exec temporal-go-examples bash
+./run-example.sh 01-hello-world worker    # Terminal 1
+./run-example.sh 01-hello-world client    # Terminal 2
+
+# 3. Check results
+# - View terminal output
+# - Visit http://localhost:8080 for Web UI
+
+# 4. Clean up (when done)
+docker-compose down
+```
 
 ## Key Concepts to Understand
 
@@ -149,21 +208,54 @@ if err != nil {
 
 ## Troubleshooting
 
+### "Cannot connect to Temporal server"
+```bash
+# Check if services are running
+docker-compose ps
+
+# Check Temporal server logs
+docker-compose logs temporal-sqlite
+
+# Test connection from container
+docker-compose exec temporal-go-examples ./check-temporal.sh
+```
+
 ### "Worker not receiving tasks"
 - Check that the task queue name matches between client and worker
 - Ensure the worker is running and registered properly
+- Verify network connectivity between containers
 
-### "Connection refused"
-- Make sure Temporal server is running (`docker-compose up`)
-- Check that localhost:7233 is accessible
+### "Docker permission issues"
+- On Linux, add user to docker group: `sudo usermod -aG docker $USER`
+- Restart terminal or log out/in
 
-### "Workflow not found"
-- Ensure the workflow is registered with the worker
-- Check that imports and package names are correct
+### "Port already in use"
+```bash
+# Check what's using the ports
+docker ps
 
-### "Activity not found"
-- Ensure activities are registered with the worker
-- Check function names and signatures
+# Stop existing containers
+docker-compose down
+
+# Force cleanup if needed
+docker-compose down -v
+```
+
+### "Module not found" or "Build errors"
+```bash
+# Enter container and rebuild
+docker-compose exec temporal-go-examples bash
+go mod tidy
+go build ./...
+```
+
+### Starting Fresh
+```bash
+# Complete cleanup and restart
+docker-compose down -v
+docker system prune -f
+./scripts/docker-setup.sh
+```
 
 ## Need Help?
 
