@@ -66,14 +66,6 @@ You'll need a Temporal server running locally. We provide multiple Docker-based 
    docker-compose up -d
    ```
 
-   **Option C: Manual Temporal Setup:**
-   ```bash
-   # Clone Temporal's docker-compose setup
-   git clone https://github.com/temporalio/docker-compose.git temporal-docker
-   cd temporal-docker
-   docker-compose up
-   ```
-
 3. **Access Temporal Web UI:**
    Open http://localhost:8080 in your browser
 
@@ -86,8 +78,10 @@ temporal-go-examples/
 ├── go.mod                   # Go module definition
 ├── go.sum                   # Go module checksums
 ├── scripts/                 # Helper scripts
-│   ├── setup.sh            # Setup script
-│   └── run-temporal.sh     # Run Temporal server
+│   ├── docker-setup.sh     # Docker setup script  
+│   ├── docker-stop.sh      # Docker stop script
+│   ├── run-example.sh      # Run examples script
+│   └── check-temporal.sh   # Check Temporal connectivity
 ├── shared/                  # Shared utilities
 │   ├── temporal.go         # Common Temporal setup
 │   └── utils.go            # Utility functions
@@ -133,19 +127,24 @@ temporal-go-examples/
 
 3. **Run your first example:**
    ```bash
-   # Enter the container
-   docker-compose exec temporal-go-examples bash
    
    # In container terminal 1 - start worker
-   ./run-example.sh 01-hello-world worker
+   docker-compose exec temporal-go-examples ./scripts/run-example.sh 01-hello-world worker
    
    # In container terminal 2 - start client
-   docker-compose exec temporal-go-examples ./run-example.sh 01-hello-world client
+   docker-compose exec temporal-go-examples ./scripts/run-example.sh 01-hello-world client
    ```
 
 4. **See results:**
    - Check your terminal for output
    - Visit http://localhost:8080 for the Temporal Web UI
+
+5. **Stop services when done:**
+   ```bash
+   ./scripts/docker-stop.sh              # Stop services
+   ./scripts/docker-stop.sh --clean      # Stop and remove volumes
+   ./scripts/docker-stop.sh --clean --image  # Stop, clean, and remove image
+   ```
 
 📖 **For detailed instructions, see [GETTING_STARTED.md](GETTING_STARTED.md)**
 🐳 **For Docker setup details, see [DOCKER_SETUP.md](DOCKER_SETUP.md)**
@@ -166,9 +165,7 @@ git clone <your-repo-url>
 cd temporal-go-examples
 go mod tidy
 
-# Start Temporal server separately
-git clone https://github.com/temporalio/docker-compose.git temporal-docker
-cd temporal-docker
+# Start Temporal server manually
 docker-compose up
 ```
 
@@ -287,6 +284,7 @@ go run client/main.go    # Terminal 2
 1. **"Temporal server not running"**
    - Make sure Docker is running
    - Start Temporal server: `./scripts/docker-setup.sh` or `docker-compose up`
+   - Stop services: `./scripts/docker-stop.sh` or `docker-compose down`
    - Check if services are healthy: `docker-compose ps`
 
 2. **"Module not found"**
@@ -295,7 +293,7 @@ go run client/main.go    # Terminal 2
 
 3. **"Port already in use"**
    - Check if Temporal is already running: `docker ps`
-   - Stop existing containers: `docker-compose down`
+   - Stop existing containers: `./scripts/docker-stop.sh` or `docker-compose down`
 
 4. **"Cannot connect to Temporal server"**
    - Check if Temporal server is ready: `docker-compose logs temporal-sqlite`

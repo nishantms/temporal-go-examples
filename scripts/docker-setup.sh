@@ -64,16 +64,22 @@ fi
 echo ""
 print_info "Waiting for services to be ready..."
 
-# Wait for services to be healthy
-max_attempts=30
+# Wait for services to be ready
+max_attempts=60
 attempt=0
 
+echo ""
+print_info "Waiting for services to start (this may take 1-2 minutes)..."
+
 while [ $attempt -lt $max_attempts ]; do
-    if docker-compose ps | grep -q "healthy"; then
-        break
+    if docker-compose ps | grep -q "Up"; then
+        # Check if Temporal is responding
+        if docker-compose exec -T temporal curl -f http://localhost:7233/ >/dev/null 2>&1; then
+            break
+        fi
     fi
-    sleep 2
-    attempt=$((attempt + 1))
+    sleep 5
+    attempt=$((attempt + 5))
     echo -n "."
 done
 
@@ -81,29 +87,24 @@ echo ""
 
 # Check if services are running
 if docker-compose ps | grep -q "Up"; then
-    print_status "Services are running!"
+    print_status "Services are starting up!"
     echo ""
     echo -e "${BLUE}📊 Access points:${NC}"
-    echo "   - Temporal Web UI: http://localhost:8080"
+    echo "   - Temporal Web UI: http://localhost:8080 (may take 1-2 minutes to be ready)"
     echo "   - Temporal Server: localhost:7233"
     echo ""
     echo -e "${BLUE}🎯 To run examples:${NC}"
-    echo "   # Method 1: Use the helper script"
-    echo "   docker-compose exec temporal-go-examples ./run-example.sh 01-hello-world worker"
-    echo ""
-    echo "   # Method 2: Interactive development"
+    echo "   # Wait for Temporal to be fully ready, then:"
     echo "   docker-compose exec temporal-go-examples bash"
-    echo "   cd examples/01-hello-world"
-    echo "   go run worker/main.go"
+    echo "   ./check-temporal.sh  # Check if Temporal is ready"
+    echo "   ./run-example.sh 01-hello-world worker"
     echo ""
-    echo -e "${BLUE}📖 Available commands:${NC}"
-    echo "   docker-compose exec temporal-go-examples bash              # Enter container"
-    echo "   docker-compose logs temporal-go-examples                   # View app logs"
-    echo "   docker-compose logs temporal-sqlite                        # View Temporal logs"
-    echo "   docker-compose down                                        # Stop all services"
-    echo "   docker-compose down -v                                     # Stop and remove volumes"
+    echo -e "${BLUE}📖 Monitor startup:${NC}"
+    echo "   docker-compose logs -f temporal     # Watch Temporal startup"
+    echo "   docker-compose logs postgres        # Check database logs"
+    echo "   docker-compose ps                   # Check container status"
     echo ""
-    echo -e "${GREEN}🎉 Setup complete! You can now run your Temporal workflows.${NC}"
+    echo -e "${GREEN}🎉 Setup initiated! Temporal may take 1-2 minutes to be fully ready.${NC}"
 else
     print_error "Some services failed to start. Check logs:"
     echo "   docker-compose logs"

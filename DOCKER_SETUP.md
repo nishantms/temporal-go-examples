@@ -44,18 +44,7 @@ Our Docker setup provides:
 
 **Use case**: Single container with everything included
 
-### 2. `Dockerfile.simple`
-**Purpose**: Lightweight Go development container
-
-**What it does**:
-- Only builds Go application
-- Expects external Temporal server
-- Minimal dependencies
-- Fast build times
-
-**Use case**: When you have Temporal running elsewhere
-
-### 3. `docker-compose.yml`
+### 2. `docker-compose.yml`
 **Purpose**: Multi-service orchestration
 
 **What it does**:
@@ -68,7 +57,7 @@ Our Docker setup provides:
 
 **Use case**: Complete development environment (recommended)
 
-### 4. `scripts/docker-setup.sh`
+### 3. `scripts/docker-setup.sh`
 **Purpose**: Automated setup script
 
 **What it does**:
@@ -141,8 +130,8 @@ docker run -p 7233:7233 -p 8080:8080 temporal-go-all
 ### Option 4: Lightweight Container + External Temporal
 
 ```bash
-# Build lightweight container
-docker build -f Dockerfile.simple -t temporal-go-simple .
+# Build simple container (if needed)
+docker build -t temporal-go-simple .
 
 # Run with external Temporal
 docker run -it --network host temporal-go-simple
