@@ -53,7 +53,7 @@ You should see services with "Up" status and health checks passing.
 docker-compose exec temporal-go-examples bash
 
 # Run the worker using our helper script
-./run-example.sh 01-hello-world worker
+./scripts/run-example.sh 01-hello-world worker
 ```
 
 **Terminal 2 - Execute the Workflow:**
@@ -62,7 +62,7 @@ docker-compose exec temporal-go-examples bash
 docker-compose exec temporal-go-examples bash
 
 # Run the client
-./run-example.sh 01-hello-world client
+./scripts/run-example.sh 01-hello-world client
 ```
 
 You should see:

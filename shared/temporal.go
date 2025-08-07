@@ -3,6 +3,7 @@ package shared
 import (
 	"context"
 	"log"
+	"os"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -14,17 +15,25 @@ const (
 
 	// Namespace is the Temporal namespace (use "default" for local development)
 	Namespace = "default"
-
-	// HostPort is the Temporal server address
-	HostPort = "localhost:7233"
 )
+
+// getHostPort returns the Temporal server address from environment or default
+func getHostPort() string {
+	if hostPort := os.Getenv("TEMPORAL_HOSTPORT"); hostPort != "" {
+		return hostPort
+	}
+	return "localhost:7233" // Default for local development
+}
 
 // CreateTemporalClient creates and returns a Temporal client
 // This is used by both workers and clients to connect to Temporal
 func CreateTemporalClient() (client.Client, error) {
+	hostPort := getHostPort()
+	log.Printf("Connecting to Temporal server at: %s", hostPort)
+
 	// Create the client object just once per process
 	c, err := client.Dial(client.Options{
-		HostPort:  HostPort,
+		HostPort:  hostPort,
 		Namespace: Namespace,
 	})
 	if err != nil {
